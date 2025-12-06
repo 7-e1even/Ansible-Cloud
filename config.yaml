@@ -1,0 +1,10 @@
+admin:
+  username: admin
+  password: admin123
+
+# 是否开启登录功能
+enable_login: true
+
+tencent:
+  secret_id: ""  # 替换为您的 SecretId
+  secret_key: "" # 替换为您的 SecretKey

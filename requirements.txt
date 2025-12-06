@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+python-multipart
+python-dotenv
+# Ansible is not supported on Windows natively.
+ansible==6.7.0; sys_platform != 'win32'
+paramiko==3.5.0
+PyJWT>=2.4.0,<3.0
+cryptography==41.0.3
+websockets
+requests
+PyYAML
+tencentcloud-sdk-python
+werkzeug

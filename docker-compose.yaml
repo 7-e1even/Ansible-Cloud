@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    image: ansible-ui:latest
+    container_name: ansible-ui
+    ports:
+      - "3000:3000"
+    environment:
+      - ANSIBLE_HOST_KEY_CHECKING=False
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./db:/app/db
+      - ./logs:/app/logs
+      - ./data:/app/data
+    restart: unless-stopped
