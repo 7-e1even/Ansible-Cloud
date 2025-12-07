@@ -60,6 +60,14 @@ export async function getInitialState(): Promise<{
   };
   // 如果不是登录页面，执行
   const { location } = history;
+  
+  // 从 localStorage 获取主题设置
+  const savedTheme = localStorage.getItem('antd-pro-nav-theme');
+  const initialSettings = {
+    ...defaultSettings,
+    navTheme: (savedTheme as LayoutSettings['navTheme']) || defaultSettings.navTheme,
+  } as Partial<LayoutSettings>;
+
   if (
     ![loginPath, '/user/register', '/user/register-result'].includes(
       location.pathname,
@@ -74,12 +82,12 @@ export async function getInitialState(): Promise<{
     return {
       fetchUserInfo,
       currentUser,
-      settings: defaultSettings as Partial<LayoutSettings>,
+      settings: initialSettings,
     };
   }
   return {
     fetchUserInfo,
-    settings: defaultSettings as Partial<LayoutSettings>,
+    settings: initialSettings,
   };
 }
 
@@ -104,6 +112,7 @@ export const layout: RunTimeLayoutConfig = ({
         onClick={() => {
           const nextTheme =
             initialState?.settings?.navTheme === 'realDark' ? 'light' : 'realDark';
+          localStorage.setItem('antd-pro-nav-theme', nextTheme);
           setInitialState((preInitialState) => ({
             ...preInitialState,
             settings: {
