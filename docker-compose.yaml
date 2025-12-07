@@ -1,8 +1,8 @@
 services:
   app:
     build: .
-    image: ansible-ui:latest
-    container_name: ansible-ui
+    image: ansible-cloud:latest
+    container_name: ansible-cloud
     ports:
       - "3000:3000"
     environment:
