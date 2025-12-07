@@ -181,7 +181,10 @@ def get_account_info(
     try:
         return service.get_account_balance()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.get("/regions")
 def get_regions(
@@ -192,7 +195,10 @@ def get_regions(
     try:
         return service.describe_regions()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.get("/zones")
 def get_zones(
@@ -204,7 +210,10 @@ def get_zones(
     try:
         return service.describe_zones(region)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.get("/images")
 def get_images(
@@ -218,7 +227,10 @@ def get_images(
     try:
         return service.describe_images(architecture, os_name, region)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.get("/instance-types")
 def get_instance_types(
@@ -231,7 +243,10 @@ def get_instance_types(
     try:
         return service.describe_instance_types(zone, region)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.get("/instances", response_model=List[TencentInstance])
 def get_instances(
@@ -243,7 +258,10 @@ def get_instances(
     try:
         return service.describe_instances(region)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 @router.post("/instances", status_code=status.HTTP_201_CREATED)
 def create_instance(
@@ -286,9 +304,12 @@ def create_instance(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error creating instance: {str(e)}", exc_info=True)
-        if "Tencent Cloud SDK Error" in str(e):
-             raise HTTPException(status_code=400, detail=str(e))
-        raise HTTPException(status_code=500, detail=f"Failed to create instance: {str(e)}")
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
+        if "Tencent Cloud SDK Error" in error_msg:
+             raise HTTPException(status_code=400, detail=error_msg)
+        raise HTTPException(status_code=500, detail=f"Failed to create instance: {error_msg}")
 
 @router.post("/instances/batch-delete")
 def batch_delete_instances(
@@ -300,6 +321,9 @@ def batch_delete_instances(
     try:
         return service.terminate_instances(data.InstanceIds, data.Region)
     except Exception as e:
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/instances/{instance_id}")
@@ -309,8 +333,33 @@ def delete_instance(
     service: TencentCloudService = Depends(get_tencent_service),
     current_user: dict = Depends(get_current_user)
 ):
-    """Delete a single instance"""
+    """Delete single instance"""
     try:
         return service.terminate_instances([instance_id], region)
     except Exception as e:
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/sync")
+def sync_instances(
+    request: TencentSyncRequest,
+    background_tasks: BackgroundTasks,
+    service: TencentCloudService = Depends(get_tencent_service),
+    db: Database = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Sync instances from Tencent Cloud to local inventory
+    """
+    try:
+        # Pass passwords map to background task
+        passwords = {item.InstanceId: item.Password for item in request.Instances}
+        background_tasks.add_task(sync_instances_task, passwords, request.Region)
+        return {"message": "Sync task started in background"}
+    except Exception as e:
+        error_msg = str(e)
+        if "Tencent Cloud credentials not configured" in error_msg:
+            raise HTTPException(status_code=400, detail="Please configure Tencent Cloud Access Key and Secret Key in System Config first.")
         raise HTTPException(status_code=500, detail=str(e))

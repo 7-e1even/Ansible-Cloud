@@ -89,6 +89,20 @@ class Database:
                 )
             """)
 
+            # New: Cloud Credentials Table
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS cloud_credentials (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    provider TEXT NOT NULL,
+                    access_key TEXT NOT NULL,
+                    secret_key TEXT NOT NULL,
+                    is_default BOOLEAN DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+
             # Migration: Split templates into ansible_templates and workflow_templates
             try:
                 cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='templates'")
@@ -635,6 +649,114 @@ class Database:
             cursor = conn.execute("SELECT * FROM workflow_logs WHERE id = ?", (log_id,))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+    # --- Cloud Credential Methods ---
+    def add_cloud_credential(self, cred_data: Dict[str, Any]) -> int:
+        with self.get_connection() as conn:
+            encrypted_sk = self.crypto.encrypt(cred_data['secret_key'])
+            
+            # If default, unset other defaults
+            if cred_data.get('is_default'):
+                conn.execute("UPDATE cloud_credentials SET is_default = 0 WHERE provider = ?", (cred_data['provider'],))
+            
+            cursor = conn.execute("""
+                INSERT INTO cloud_credentials (name, provider, access_key, secret_key, is_default)
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                cred_data['name'],
+                cred_data['provider'],
+                cred_data['access_key'],
+                encrypted_sk,
+                cred_data.get('is_default', False)
+            ))
+            return cursor.lastrowid
+
+    def get_cloud_credentials(self, provider: Optional[str] = None) -> List[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            query = "SELECT * FROM cloud_credentials"
+            params = []
+            if provider:
+                query += " WHERE provider = ?"
+                params.append(provider)
+            query += " ORDER BY created_at DESC"
+            
+            cursor = conn.execute(query, params)
+            creds = [dict(row) for row in cursor.fetchall()]
+            
+            for cred in creds:
+                # Mask Access Key partially
+                ak = cred['access_key']
+                if len(ak) > 8:
+                    cred['access_key'] = ak[:4] + '*' * (len(ak) - 8) + ak[-4:]
+                # Never return SK in list
+                cred['secret_key'] = "********" 
+            return creds
+
+    def get_cloud_credential(self, cred_id: int, decrypt: bool = False) -> Optional[Dict[str, Any]]:
+        with self.get_connection() as conn:
+            cursor = conn.execute("SELECT * FROM cloud_credentials WHERE id = ?", (cred_id,))
+            row = cursor.fetchone()
+            if row:
+                cred = dict(row)
+                if decrypt:
+                    try:
+                        cred['secret_key'] = self.crypto.decrypt(cred['secret_key'])
+                    except:
+                        cred['secret_key'] = ""
+                else:
+                    cred['secret_key'] = "********"
+                return cred
+            return None
+
+    def update_cloud_credential(self, cred_id: int, cred_data: Dict[str, Any]) -> None:
+        with self.get_connection() as conn:
+            fields = []
+            values = []
+            
+            if 'name' in cred_data:
+                fields.append("name = ?")
+                values.append(cred_data['name'])
+            
+            if 'provider' in cred_data:
+                fields.append("provider = ?")
+                values.append(cred_data['provider'])
+                
+            if 'access_key' in cred_data and cred_data['access_key']:
+                fields.append("access_key = ?")
+                values.append(cred_data['access_key'])
+                
+            if 'secret_key' in cred_data and cred_data['secret_key']:
+                encrypted_sk = self.crypto.encrypt(cred_data['secret_key'])
+                fields.append("secret_key = ?")
+                values.append(encrypted_sk)
+                
+            if 'is_default' in cred_data:
+                fields.append("is_default = ?")
+                values.append(cred_data['is_default'])
+                # If setting to default, unset others
+                if cred_data['is_default']:
+                     # We need provider. If not in data, fetch from DB.
+                     provider = cred_data.get('provider')
+                     if not provider:
+                         curr = conn.execute("SELECT provider FROM cloud_credentials WHERE id = ?", (cred_id,)).fetchone()
+                         if curr:
+                             provider = curr[0]
+                     if provider:
+                        conn.execute("UPDATE cloud_credentials SET is_default = 0 WHERE provider = ? AND id != ?", (provider, cred_id))
+
+            if not fields:
+                return
+
+            values.append(cred_id)
+            conn.execute(f"""
+                UPDATE cloud_credentials 
+                SET {', '.join(fields)}, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, values)
+
+    def delete_cloud_credential(self, cred_id: int) -> None:
+        with self.get_connection() as conn:
+            conn.execute("DELETE FROM cloud_credentials WHERE id = ?", (cred_id,))
 
 # Dependency
 def get_db() -> Database:

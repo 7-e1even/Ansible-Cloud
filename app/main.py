@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from app.core.config import settings
 from app.core.database import Database
-from app.api.v1.routers import auth, hosts, ansible, sftp, logs, ws, files, templates, tencent, workflow
+from app.api.v1.routers import auth, hosts, ansible, sftp, logs, ws, files, templates, tencent, workflow, cloud_credentials
 from app.utils.crypto import derive_key_from_credentials, set_crypto_keys
 import time
 import os
@@ -85,6 +85,7 @@ app.include_router(files.router, prefix="/api", tags=["files"]) # /api/upload
 app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
 app.include_router(tencent.router, prefix="/api/tencent", tags=["tencent"])
 app.include_router(workflow.router, prefix="/api/workflows", tags=["workflows"])
+app.include_router(cloud_credentials.router, prefix="/api", tags=["cloud-credentials"])
 
 @app.on_event("startup")
 async def startup_event():

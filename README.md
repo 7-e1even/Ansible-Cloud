@@ -94,9 +94,6 @@ admin:
 
 enable_login: true
 
-tencent:
-  secret_id: "your_secret_id"
-  secret_key: "your_secret_key"
 ```
 
 ### 3. 启动服务

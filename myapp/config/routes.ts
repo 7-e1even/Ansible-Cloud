@@ -78,6 +78,13 @@ export default [
     component: './Workflow/Execute/List',
   },
   {
+    name: 'cloud.keys',
+    icon: 'setting',
+    path: '/cloud/keys',
+    component: './Cloud/Keys',
+    hideInMenu: true,
+  },
+  {
     path: '/workflow/execute/create',
     component: './Workflow/Execute/Create',
     hideInMenu: true,

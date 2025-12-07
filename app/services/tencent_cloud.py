@@ -12,10 +12,34 @@ import logging
 logger = logging.getLogger(__name__)
 
 class TencentCloudService:
-    def __init__(self):
-        self.secret_id = settings.TENCENT_SECRET_ID
-        self.secret_key = settings.TENCENT_SECRET_KEY
+    def __init__(self, secret_id: Optional[str] = None, secret_key: Optional[str] = None):
+        self.secret_id = secret_id
+        self.secret_key = secret_key
         self._billing_client = None
+        
+        if not self.secret_id or not self.secret_key:
+             self._load_credentials()
+
+    def _load_credentials(self):
+        # Try DB
+        try:
+            from app.core.database import Database
+            db = Database()
+            creds = db.get_cloud_credentials(provider='tencent')
+            # Find default
+            default_cred = next((c for c in creds if c.get('is_default')), None)
+            
+            # If no default marked, use the first one available
+            if not default_cred and creds:
+                 default_cred = creds[0]
+            
+            if default_cred:
+                 full_cred = db.get_cloud_credential(default_cred['id'], decrypt=True)
+                 if full_cred:
+                     self.secret_id = full_cred['access_key']
+                     self.secret_key = full_cred['secret_key']
+        except Exception as e:
+            logger.error(f"Failed to load credentials from DB: {e}")
 
     def _check_config(self):
         if not self.secret_id or not self.secret_key:

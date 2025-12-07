@@ -25,8 +25,6 @@ class Settings(BaseSettings):
     LOG_DIR: str = "logs"
     
     # Tencent Cloud
-    TENCENT_SECRET_ID: Optional[str] = os.getenv("TENCENT_SECRET_ID")
-    TENCENT_SECRET_KEY: Optional[str] = os.getenv("TENCENT_SECRET_KEY")
     TENCENT_REGION: str = os.getenv("TENCENT_REGION", "ap-guangzhou")
 
     class Config:
@@ -43,8 +41,6 @@ class Settings(BaseSettings):
                             self.ADMIN_USERNAME = config_data['admin'].get('username', self.ADMIN_USERNAME)
                             self.ADMIN_PASSWORD = config_data['admin'].get('password', self.ADMIN_PASSWORD)
                         if 'tencent' in config_data:
-                            self.TENCENT_SECRET_ID = config_data['tencent'].get('secret_id', self.TENCENT_SECRET_ID)
-                            self.TENCENT_SECRET_KEY = config_data['tencent'].get('secret_key', self.TENCENT_SECRET_KEY)
                             self.TENCENT_REGION = config_data['tencent'].get('region', self.TENCENT_REGION)
             except Exception as e:
                 print(f"Warning: Failed to load config from {path}: {e}")

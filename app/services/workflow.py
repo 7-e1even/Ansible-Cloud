@@ -207,8 +207,31 @@ class WorkflowService:
             self._update_status(workflow_id, "failed", "wait_for_ready")
             return False
 
+    def _rollback_deployment(self, workflow_id: int, context: Dict[str, Any], host_id: Optional[int]):
+        """Rollback resources on failure"""
+        # Rollback: Release instance
+        instance_id = context.get("InstanceId")
+        region = context.get("Region")
+        if instance_id and region:
+            try:
+                self._log_stage(workflow_id, "ansible_deployment", "warning", f"Rolling back: Terminating instance {instance_id}...")
+                self.tencent_service.terminate_instances([instance_id], region)
+                self._log_stage(workflow_id, "ansible_deployment", "warning", f"Instance {instance_id} terminated.")
+            except Exception as e:
+                self._log_stage(workflow_id, "ansible_deployment", "failed", f"Rollback failed: {str(e)}")
+
+        # Rollback: Delete host
+        if host_id:
+            try:
+                self.db.delete_host(host_id)
+                self._log_stage(workflow_id, "ansible_deployment", "warning", f"Host {host_id} removed from inventory.")
+            except Exception as e:
+                logger.error(f"Failed to delete host {host_id}: {e}")
+
     def _stage_ansible_deployment(self, workflow_id: int) -> bool:
         self._log_stage(workflow_id, "ansible_deployment", "running", "Registering to Ansible Inventory...")
+        host_id = None
+        context = {}
         try:
             context = self._get_context(workflow_id)
             
@@ -307,12 +330,15 @@ class WorkflowService:
                     self._log_stage(workflow_id, "ansible_deployment", "success", "Playbook executed successfully", detail=log_output)
                 else:
                     self._log_stage(workflow_id, "ansible_deployment", "failed", "Playbook execution failed", detail=log_output)
+                    self._update_status(workflow_id, "failed", "ansible_deployment")
+                    self._rollback_deployment(workflow_id, context, host_id)
                     return False
 
             return True
         except Exception as e:
             self._log_stage(workflow_id, "ansible_deployment", "failed", str(e))
             self._update_status(workflow_id, "failed", "ansible_deployment")
+            self._rollback_deployment(workflow_id, context, host_id)
             return False
 
 from fastapi import Depends

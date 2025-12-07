@@ -48,6 +48,7 @@ export default {
   'menu.tencent.instances': '云服务器',
   'menu.tencent.create': '创建服务器',
   'menu.workflow': '工作流系统',
-  'menu.workflow.manage': '工作流管理',
-  'menu.workflow.execute': '部署中心',
+  'menu.workflow.manage': '流程管理',
+  'menu.workflow.execute': '执行记录',
+  'menu.cloud.keys': '系统配置',
 };

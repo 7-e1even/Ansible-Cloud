@@ -1,8 +1,8 @@
-import { LinkOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons';
+import { LinkOutlined, SunOutlined, MoonOutlined, SettingOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
 import { SettingDrawer } from '@ant-design/pro-components';
 import type { RequestConfig, RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
+import { history, Link, useIntl } from '@umijs/max';
 import React from 'react';
 import {
   AvatarDropdown,
@@ -143,9 +143,9 @@ export const layout: RunTimeLayoutConfig = ({
     onPageChange: () => {
       const { location } = history;
       // 如果没有登录，重定向到 login
-      // if (!initialState?.currentUser && location.pathname !== loginPath) {
-      //   history.push(loginPath);
-      // }
+      if (!initialState?.currentUser && ![loginPath, '/user/register', '/user/register-result'].includes(location.pathname)) {
+        history.push(loginPath);
+      }
     },
     bgLayoutImgList: [
       {
@@ -167,14 +167,19 @@ export const layout: RunTimeLayoutConfig = ({
         width: '331px',
       },
     ],
-    links: isDev
+    links: [
+      <Link key="cloud-keys" to="/cloud/keys">
+        <SettingOutlined />
+        <span>{initialState?.settings?.navTheme === 'realDark' ? ' System Config' : ' 系统配置'}</span>
+      </Link>,
+      ...(isDev
       ? [
           <Link key="openapi" to="/umi/plugin/openapi" target="_blank">
             <LinkOutlined />
             <span>OpenAPI 文档</span>
           </Link>,
         ]
-      : [],
+      : [])],
     menuHeaderRender: undefined,
     // 自定义 403 页面
     // unAccessible: <div>unAccessible</div>,

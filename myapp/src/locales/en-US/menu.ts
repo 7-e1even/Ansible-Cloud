@@ -49,7 +49,8 @@ export default {
   'menu.tencent': 'Tencent Cloud',
   'menu.tencent.instances': 'Instances',
   'menu.tencent.create': 'Create Instance',
-  'menu.workflow': 'Workflow',
-  'menu.workflow.manage': 'Workflow Management',
-  'menu.workflow.execute': 'Deployment Center',
+  'menu.workflow': 'Workflow System',
+  'menu.workflow.manage': 'Workflow Manage',
+  'menu.workflow.execute': 'Workflow Execute',
+  'menu.cloud.keys': 'System Config',
 };

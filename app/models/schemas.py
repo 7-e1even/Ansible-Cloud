@@ -222,3 +222,31 @@ class ExtractTemplateRequest(BaseModel):
     instance_id: str
     region: str
 
+# --- Cloud Credentials Schemas ---
+class CloudCredentialBase(BaseModel):
+    name: str
+    provider: str = Field(..., description="Provider name, e.g., tencent")
+    is_default: bool = False
+
+class CloudCredentialCreate(CloudCredentialBase):
+    access_key: str
+    secret_key: str
+
+class CloudCredentialUpdate(BaseModel):
+    name: Optional[str] = None
+    provider: Optional[str] = None
+    access_key: Optional[str] = None
+    secret_key: Optional[str] = None
+    is_default: Optional[bool] = None
+
+class CloudCredentialResponse(CloudCredentialBase):
+    id: int
+    access_key: str  # Masked
+    created_at: str
+    updated_at: str
+
+class CloudCredentialTestRequest(BaseModel):
+    provider: str
+    access_key: str
+    secret_key: str
+

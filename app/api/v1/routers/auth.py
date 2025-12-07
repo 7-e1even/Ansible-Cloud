@@ -29,7 +29,10 @@ def login(data: LoginRequest, response: Response):
             "success": True, 
             "message": "Login successful", 
             "token": token,
-            "redirect_url": "/"  # Explicitly returning redirect URL
+            "redirect_url": "/",  # Explicitly returning redirect URL
+            "status": "ok",
+            "type": "account",
+            "currentAuthority": "admin"
         }
     
     raise HTTPException(

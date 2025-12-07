@@ -20,6 +20,7 @@ import React, { useState } from 'react';
 import { flushSync } from 'react-dom';
 import { Footer } from '@/components';
 import { login } from '@/services/ant-design-pro/api';
+import { authStorage } from '@/utils/auth';
 import Settings from '../../../../config/defaultSettings';
 
 const useStyles = createStyles(({ token }) => {
@@ -89,20 +90,31 @@ const Login: React.FC = () => {
         }));
       });
     }
+    return userInfo;
   };
 
   const handleSubmit = async (values: API.LoginParams) => {
     try {
       // 登录
       const msg = await login({ ...values }, { skipErrorHandler: true });
-      if (msg.status === 'ok') {
+      if (msg.status === 'ok' || msg.success) {
+        // 保存token
+        if (msg.token) {
+           authStorage.setAuth(true, msg.token);
+        }
+
         const defaultLoginSuccessMessage = intl.formatMessage({
           id: 'pages.login.success',
           defaultMessage: '登录成功！',
         });
         message.success(defaultLoginSuccessMessage);
-        await fetchUserInfo();
         
+        const userInfo = await fetchUserInfo();
+        if (!userInfo) {
+           message.error('Failed to verify user session');
+           return;
+        }
+
         // Use redirect_url from backend if available
         let redirect = msg.redirect_url;
         if (!redirect) {
