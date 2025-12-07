@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    image: ansible-cloud:latest
+    image: registry.cn-hangzhou.aliyuncs.com/7eleven_docker/ansible-cloud:latest
     container_name: ansible-cloud
     ports:
       - "3000:3000"
