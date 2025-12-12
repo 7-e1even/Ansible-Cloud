@@ -23,12 +23,6 @@ export default [
     ],
   },
   {
-    path: '/welcome',
-    name: 'welcome',
-    icon: 'smile',
-    component: './Welcome',
-  },
-  {
     name: 'ansible.hosts',
     icon: 'desktop',
     path: '/ansible/hosts',
@@ -96,7 +90,7 @@ export default [
   },
   {
     path: '/',
-    redirect: '/welcome',
+    redirect: '/ansible/hosts',
   },
   {
     path: '*',
