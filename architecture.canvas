@@ -1,0 +1,270 @@
+{
+	"nodes": [
+		{
+			"id": "group_infra",
+			"type": "group",
+			"label": "Infrastructure & Configuration",
+			"x": -100,
+			"y": -100,
+			"width": 500,
+			"height": 800
+		},
+		{
+			"id": "node_docker",
+			"type": "text",
+			"text": "## 🐳 docker-compose.yaml\n**类型**: 基础设施\n**状态**: 单机部署\n\n### 📝 核心定义\n- **服务**: `app` (FastAPI + React Build)\n- **端口**: `3000` (Web UI & API)\n- **挂载**: \n    - `config.yaml` (配置)\n    - `db/` (SQLite 数据)\n    - `logs/` (日志)\n\n> ⚠️ **注意**: 数据库为嵌入式 SQLite，生产环境可能需要迁移到 PostgreSQL。",
+			"x": 0,
+			"y": 0,
+			"width": 400,
+			"height": 400,
+			"color": "0"
+		},
+		{
+			"id": "node_config",
+			"type": "text",
+			"text": "## ⚙️ app/core/config.py\n**类型**: 配置中心\n\n### 📝 职责\n- 加载环境变量 & `config.yaml`\n- 定义数据库路径\n- 管理密钥 (JWT Secret)\n- 日志配置",
+			"x": 0,
+			"y": 450,
+			"width": 400,
+			"height": 200,
+			"color": "4"
+		},
+		{
+			"id": "group_frontend",
+			"type": "group",
+			"label": "Frontend (React/Umi)",
+			"x": 500,
+			"y": -100,
+			"width": 600,
+			"height": 1500
+		},
+		{
+			"id": "node_routes",
+			"type": "text",
+			"text": "## 🛣️ myapp/config/routes.ts\n**类型**: 路由配置\n\n### 📝 页面映射\n- `/ansible/hosts` -> `Ansible/Hosts`\n- `/ansible/batch-execute` -> `Ansible/BatchExecute`\n- `/workflow/manage` -> `Workflow/Manage`\n- `/tencent/instances` -> `Tencent/Instances`\n\n### 🔗 下游依赖\n- 指向 `src/pages/*` 组件",
+			"x": 550,
+			"y": 0,
+			"width": 500,
+			"height": 400,
+			"color": "2"
+		},
+		{
+			"id": "node_page_hosts",
+			"type": "text",
+			"text": "## 🖥️ Page: Ansible/Hosts\n**类型**: UI 组件\n\n### 📝 功能\n- 主机列表展示\n- 主机添加/编辑/删除\n- 连通性测试 (Ping)\n- 终端连接入口\n\n### 🔗 API 调用\n- `GET /api/hosts`\n- `POST /api/hosts`\n- `GET /api/hosts/{id}/ping`",
+			"x": 550,
+			"y": 450,
+			"width": 500,
+			"height": 400,
+			"color": "2"
+		},
+		{
+			"id": "node_page_execute",
+			"type": "text",
+			"text": "## ⚡ Page: Ansible/BatchExecute\n**类型**: UI 组件\n\n### 📝 功能\n- 批量命令执行\n- Playbook 上传与执行\n- 实时日志展示\n\n### 🔗 API 调用\n- `POST /api/execute`\n- `POST /api/playbook/execute`",
+			"x": 550,
+			"y": 900,
+			"width": 500,
+			"height": 400,
+			"color": "2"
+		},
+		{
+			"id": "group_backend_api",
+			"type": "group",
+			"label": "Backend API (FastAPI)",
+			"x": 1200,
+			"y": -100,
+			"width": 600,
+			"height": 2000
+		},
+		{
+			"id": "node_main",
+			"type": "text",
+			"text": "## 🚀 app/main.py\n**类型**: 应用入口\n\n### 📝 职责\n- 初始化 FastAPI 实例\n- 配置 CORS & 中间件 (Access Log)\n- 挂载所有 Router\n- 启动事件 (Startup Event)\n\n### 🔗 包含模块\n- `ansible.router`\n- `hosts.router`\n- `workflow.router`\n- `tencent.router`",
+			"x": 1250,
+			"y": 0,
+			"width": 500,
+			"height": 400,
+			"color": "2"
+		},
+		{
+			"id": "node_router_ansible",
+			"type": "text",
+			"text": "## 🎮 Router: ansible.py\n**类型**: 控制器\n\n### 📝 接口定义\n- `POST /execute`: 执行 Ad-hoc 命令\n- `POST /playbook/execute`: 执行 Playbook\n- `GET /hosts/{id}/facts`: 获取主机 Facts\n\n### 🔗 依赖\n- `AnsibleService` (核心逻辑)\n- `Database` (获取主机信息)",
+			"x": 1250,
+			"y": 450,
+			"width": 500,
+			"height": 400,
+			"color": "2"
+		},
+		{
+			"id": "node_router_hosts",
+			"type": "text",
+			"text": "## 📋 Router: hosts.py\n**类型**: 控制器\n\n### 📝 接口定义\n- CRUD 操作 (Create, Read, Update, Delete)\n- 导入/导出主机列表\n\n### 🔗 依赖\n- `Database` (直接数据操作)",
+			"x": 1250,
+			"y": 900,
+			"width": 500,
+			"height": 300,
+			"color": "2"
+		},
+		{
+			"id": "node_router_workflow",
+			"type": "text",
+			"text": "## ⛓️ Router: workflow.py\n**类型**: 控制器\n\n### 📝 接口定义\n- 工作流编排\n- 任务节点管理\n- 执行历史查询\n\n### 🔗 依赖\n- `WorkflowService`",
+			"x": 1250,
+			"y": 1250,
+			"width": 500,
+			"height": 300,
+			"color": "2"
+		},
+		{
+			"id": "group_core",
+			"type": "group",
+			"label": "Core Services & Data",
+			"x": 1900,
+			"y": -100,
+			"width": 600,
+			"height": 2000
+		},
+		{
+			"id": "node_service_ansible",
+			"type": "text",
+			"text": "## 🧠 Service: ansible.py\n**类型**: 核心业务逻辑\n**复杂度**: ⭐⭐⭐⭐⭐\n\n### 📝 核心职责\n- **Ansible API 封装**: 调用 Python `ansible` 库\n- **Inventory 生成**: 动态生成临时 Inventory 文件\n- **任务执行**: Ad-hoc 命令与 Playbook 执行\n- **结果解析**: 解析 Ansible 回调数据\n\n### ⚠️ 关键逻辑\n- 使用 `ansible.executor.task_queue_manager`\n- 自定义 `ResultCallback` 处理异步结果\n- 依赖系统级 Ansible 环境 (Linux Only)",
+			"x": 1950,
+			"y": 0,
+			"width": 500,
+			"height": 600,
+			"color": "1"
+		},
+		{
+			"id": "node_database",
+			"type": "text",
+			"text": "## 💾 app/core/database.py\n**类型**: 数据访问层 (DAL)\n\n### 📝 职责\n- SQLite 连接管理\n- **手写 SQL / 轻量封装**: 提供 `get_hosts`, `add_host` 等方法\n- 访问日志记录\n\n### 🔗 数据模型\n- Hosts Table\n- Access Logs\n- Workflow Definitions",
+			"x": 1950,
+			"y": 650,
+			"width": 500,
+			"height": 400,
+			"color": "3"
+		},
+		{
+			"id": "node_service_workflow",
+			"type": "text",
+			"text": "## 🔄 Service: workflow.py\n**类型**: 业务逻辑\n\n### 📝 职责\n- 解析工作流 DAG (有向无环图)\n- 调度任务节点\n- 状态流转管理",
+			"x": 1950,
+			"y": 1100,
+			"width": 500,
+			"height": 300,
+			"color": "1"
+		}
+	],
+	"edges": [
+		{
+			"id": "edge_docker_config",
+			"fromNode": "node_docker",
+			"fromSide": "bottom",
+			"toNode": "node_config",
+			"toSide": "top",
+			"label": "mounts",
+			"color": "4"
+		},
+		{
+			"id": "edge_routes_hosts",
+			"fromNode": "node_routes",
+			"fromSide": "bottom",
+			"toNode": "node_page_hosts",
+			"toSide": "top",
+			"label": "routes to",
+			"color": "2"
+		},
+		{
+			"id": "edge_routes_execute",
+			"fromNode": "node_routes",
+			"fromSide": "bottom",
+			"toNode": "node_page_execute",
+			"toSide": "top",
+			"label": "routes to",
+			"color": "2"
+		},
+		{
+			"id": "edge_main_ansible",
+			"fromNode": "node_main",
+			"fromSide": "bottom",
+			"toNode": "node_router_ansible",
+			"toSide": "top",
+			"label": "includes",
+			"color": "2"
+		},
+		{
+			"id": "edge_main_hosts",
+			"fromNode": "node_main",
+			"fromSide": "bottom",
+			"toNode": "node_router_hosts",
+			"toSide": "top",
+			"label": "includes",
+			"color": "2"
+		},
+		{
+			"id": "edge_main_workflow",
+			"fromNode": "node_main",
+			"fromSide": "bottom",
+			"toNode": "node_router_workflow",
+			"toSide": "top",
+			"label": "includes",
+			"color": "2"
+		},
+		{
+			"id": "edge_router_ansible_service",
+			"fromNode": "node_router_ansible",
+			"fromSide": "right",
+			"toNode": "node_service_ansible",
+			"toSide": "left",
+			"label": "calls",
+			"color": "1"
+		},
+		{
+			"id": "edge_router_hosts_db",
+			"fromNode": "node_router_hosts",
+			"fromSide": "right",
+			"toNode": "node_database",
+			"toSide": "left",
+			"label": "queries",
+			"color": "3"
+		},
+		{
+			"id": "edge_service_ansible_db",
+			"fromNode": "node_service_ansible",
+			"fromSide": "bottom",
+			"toNode": "node_database",
+			"toSide": "top",
+			"label": "reads inventory",
+			"color": "3"
+		},
+		{
+			"id": "edge_router_workflow_service",
+			"fromNode": "node_router_workflow",
+			"fromSide": "right",
+			"toNode": "node_service_workflow",
+			"toSide": "left",
+			"label": "calls",
+			"color": "1"
+		},
+		{
+			"id": "edge_page_hosts_api",
+			"fromNode": "node_page_hosts",
+			"fromSide": "right",
+			"toNode": "node_router_hosts",
+			"toSide": "left",
+			"label": "HTTP Request",
+			"color": "2"
+		},
+		{
+			"id": "edge_page_execute_api",
+			"fromNode": "node_page_execute",
+			"fromSide": "right",
+			"toNode": "node_router_ansible",
+			"toSide": "left",
+			"label": "HTTP Request",
+			"color": "2"
+		}
+	]
+}

@@ -11,6 +11,7 @@ export async function getInstances(region?: string) {
     method: 'GET',
     headers: getHeaders(),
     params: { region },
+    skipErrorHandler: true,
   });
 }
 
@@ -50,6 +51,7 @@ export async function getAccountInfo() {
   return request<TencentAPI.AccountInfo>('/api/tencent/account', {
     method: 'GET',
     headers: getHeaders(),
+    skipErrorHandler: true,
   });
 }
 
@@ -57,6 +59,7 @@ export async function getRegions() {
   return request<any[]>('/api/tencent/regions', {
     method: 'GET',
     headers: getHeaders(),
+    skipErrorHandler: true,
   });
 }
 
@@ -65,6 +68,7 @@ export async function getZones(region?: string) {
     method: 'GET',
     headers: getHeaders(),
     params: { region },
+    skipErrorHandler: true,
   });
 }
 
@@ -73,6 +77,7 @@ export async function getInstanceTypes(zone?: string, region?: string) {
     method: 'GET',
     headers: getHeaders(),
     params: { zone, region },
+    skipErrorHandler: true,
   });
 }
 
@@ -81,6 +86,7 @@ export async function getImages(architecture?: string, osName?: string, region?:
     method: 'GET',
     headers: getHeaders(),
     params: { architecture, os_name: osName, region },
+    skipErrorHandler: true,
   });
 }
 

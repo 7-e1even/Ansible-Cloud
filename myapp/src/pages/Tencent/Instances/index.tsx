@@ -1,5 +1,5 @@
 import { PageContainer, ProTable, ActionType, ProCard } from '@ant-design/pro-components';
-import { Button, message, Popconfirm, Modal, Form, Input, Card, Statistic, Row, Col, Tag, Space, Typography, Dropdown } from 'antd';
+import { Button, message as antdMessage, Popconfirm, Modal, Form, Input, Card, Statistic, Row, Col, Tag, Space, Typography, Dropdown, App } from 'antd';
 import { useRef, useState, useEffect } from 'react';
 import { getInstances, instanceAction, getAccountInfo, deleteInstance, getRegions, batchDeleteInstances } from '@/services/tencent/api';
 import { extractTemplate } from '@/services/workflow/api';
@@ -8,17 +8,45 @@ import { history } from '@umijs/max';
 
 const { Text } = Typography;
 
-export default () => {
+const Instances: React.FC = () => {
+  const { message, modal } = App.useApp();
   const actionRef = useRef<ActionType>();
+  const errorShownRef = useRef(false);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [currentInstance, setCurrentInstance] = useState<string>();
   const [balance, setBalance] = useState<TencentAPI.AccountInfo>();
   const [currentRegion, setCurrentRegion] = useState<string>('ap-nanjing');
   const [form] = Form.useForm();
+
+  const handleError = (e: any) => {
+    if (errorShownRef.current) return;
+    
+    const errorMsg = e?.response?.data?.detail || e.message || 'Unknown error';
+    // Check for specific error message regarding missing credentials
+    if (e?.response?.status === 400 && (errorMsg.includes("configure Tencent Cloud Access Key") || errorMsg.includes("credentials not configured"))) {
+        errorShownRef.current = true;
+        modal.warning({
+            title: '需要配置腾讯云密钥',
+            content: '检测到您尚未配置腾讯云 AccessKey/SecretKey，请前往设置页面进行配置。',
+            okText: '前往配置',
+            onOk: () => {
+                errorShownRef.current = false;
+                history.push('/cloud/keys');
+            },
+            onCancel: () => {
+                errorShownRef.current = false;
+            },
+            closable: true,
+        });
+    } else {
+         message.error(`获取数据失败: ${errorMsg}`);
+    }
+  };
   
   useEffect(() => {
-    getAccountInfo().then(setBalance).catch(() => {
-        // Ignore error if account info fails
+    getAccountInfo().then(setBalance).catch((e) => {
+        // Also check error here
+        handleError(e);
     });
   }, []);
 
@@ -85,8 +113,13 @@ export default () => {
       hideInTable: true,
       valueType: 'select',
       request: async () => {
-          const regions = await getRegions();
-          return regions;
+          try {
+              const regions = await getRegions();
+              return regions;
+          } catch (e) {
+              handleError(e);
+              return [];
+          }
       },
       formItemProps: {
           rules: [{ required: true, message: '请选择地域' }],
@@ -201,7 +234,7 @@ export default () => {
                                 label: '重启实例',
                                 disabled: !isRunning,
                                 onClick: () => {
-                                    Modal.confirm({
+                                    modal.confirm({
                                         title: '确定要重启吗?',
                                         content: '重启过程中实例将无法访问。',
                                         onOk: () => handleAction(record.InstanceId, 'reboot')
@@ -221,7 +254,7 @@ export default () => {
                                 label: '销毁/退还',
                                 danger: true,
                                 onClick: () => {
-                                    Modal.confirm({
+                                    modal.confirm({
                                         title: '确定要销毁/退还实例吗?',
                                         content: '此操作不可恢复，实例数据将丢失！',
                                         okType: 'danger',
@@ -289,11 +322,19 @@ export default () => {
         request={async (params) => {
           if (!params.Region) return { data: [], success: true };
           setCurrentRegion(params.Region);
-          const data = await getInstances(params.Region);
-          return {
-            data: data,
-            success: true,
-          };
+          try {
+            const data = await getInstances(params.Region);
+            return {
+                data: data,
+                success: true,
+            };
+          } catch (e) {
+            handleError(e);
+            return {
+                data: [],
+                success: false,
+            };
+          }
         }}
         columns={columns}
         pagination={{
@@ -305,7 +346,7 @@ export default () => {
           <Space>
             <a
               onClick={() => {
-                Modal.confirm({
+                modal.confirm({
                   title: '确定要批量销毁/退还实例吗?',
                   content: `即将销毁 ${selectedRowKeys.length} 个实例，操作不可恢复！`,
                   okType: 'danger',
@@ -342,3 +383,9 @@ export default () => {
     </PageContainer>
   );
 };
+
+export default () => (
+    <App>
+        <Instances />
+    </App>
+);
